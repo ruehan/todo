@@ -1,9 +1,10 @@
 import { json, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, Form } from "@remix-run/react";
-
+import { useLoaderData, Form, useSearchParams } from "@remix-run/react";
+import { useState } from "react";
 import type { Priority } from "@prisma/client";
 import { getCategories, createCategory, deleteCategory } from "~/category.server";
-import { CategoryManager } from "./CategoryManager";
+import { CategoryFolder } from "./CategoryFolder";
+import { Modal } from "./Modal";
 import { requireUserId } from "./session.server";
 import { getTodos, createTodo, updateTodo, deleteTodo } from "./todo.server";
 import { TodoItem } from "./TodoItem";
@@ -52,60 +53,59 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Index() {
 	const { todos, categories } = useLoaderData<typeof loader>();
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const uncategorizedTodos = todos.filter((todo) => !todo.categoryId);
 
 	return (
 		<div>
-			<CategoryManager categories={categories} />
-
 			<div className="mb-8">
-				<h2 className="text-lg font-semibold mb-2">필터</h2>
-				<Form method="get" className="flex gap-4">
-					<select name="category" className="rounded border px-2 py-1" onChange={(e) => e.form?.submit()}>
-						<option value="">모든 카테고리</option>
-						{categories.map((category) => (
-							<option key={category.id} value={category.id}>
-								{category.name}
-							</option>
-						))}
-					</select>
-
-					<select name="priority" className="rounded border px-2 py-1" onChange={(e) => e.form?.submit()}>
-						<option value="">모든 우선순위</option>
-						<option value="HIGH">높음</option>
-						<option value="MEDIUM">중간</option>
-						<option value="LOW">낮음</option>
-					</select>
-				</Form>
-			</div>
-
-			<Form method="post" className="mb-8">
-				<div className="flex gap-4">
-					<input type="text" name="title" placeholder="새로운 할 일" className="flex-1 rounded border px-2 py-1" required />
-					<select name="categoryId" className="rounded border px-2 py-1">
-						<option value="">카테고리 선택</option>
-						{categories.map((category) => (
-							<option key={category.id} value={category.id}>
-								{category.name}
-							</option>
-						))}
-					</select>
-					<select name="priority" className="rounded border px-2 py-1">
-						<option value="HIGH">높음</option>
-						<option value="MEDIUM">중간</option>
-						<option value="LOW">낮음</option>
-					</select>
-					<input type="date" name="deadline" className="rounded border px-2 py-1" />
-					<button type="submit" name="_action" value="create" className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600">
-						추가
+				<div className="flex gap-4 mb-4">
+					<Form method="post" className="flex-1 flex gap-4">
+						<input type="text" name="title" placeholder="새로운 할 일" className="flex-1 rounded border px-2 py-1" required />
+						<select name="priority" className="rounded border px-2 py-1">
+							<option value="HIGH">높음</option>
+							<option value="MEDIUM">중간</option>
+							<option value="LOW">낮음</option>
+						</select>
+						<input type="date" name="deadline" className="rounded border px-2 py-1" />
+						<button type="submit" name="_action" value="create" className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600">
+							할 일 추가
+						</button>
+					</Form>
+					<button onClick={() => setIsModalOpen(true)} className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600">
+						폴더 추가
 					</button>
 				</div>
-			</Form>
+			</div>
 
-			<div className="space-y-2">
-				{todos.map((todo) => (
-					<TodoItem key={todo.id} todo={todo} />
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{categories.map((category) => (
+					<CategoryFolder key={category.id} category={category} />
+				))}
+
+				{uncategorizedTodos.map((todo) => (
+					<div key={todo.id} className="border rounded-lg p-4 hover:bg-gray-50">
+						<TodoItem todo={todo} />
+					</div>
 				))}
 			</div>
+
+			<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+				<h2 className="text-lg font-semibold mb-4">새 폴더 만들기</h2>
+				<Form method="post" onSubmit={() => setIsModalOpen(false)}>
+					<div className="space-y-4">
+						<input type="text" name="categoryName" placeholder="폴더 이름" className="w-full rounded border px-2 py-1" required />
+						<div className="flex justify-end gap-2">
+							<button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-1 rounded border hover:bg-gray-100">
+								취소
+							</button>
+							<button type="submit" name="_action" value="createCategory" className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600">
+								만들기
+							</button>
+						</div>
+					</div>
+				</Form>
+			</Modal>
 		</div>
 	);
 }
