@@ -54,7 +54,10 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function Index() {
 	const { todos, categories } = useLoaderData<typeof loader>();
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const uncategorizedTodos = todos.filter((todo) => !todo.categoryId);
+	const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
+	// 현재 선택된 카테고리의 할일 목록
+	const filteredTodos = selectedCategoryId ? todos.filter((todo) => todo.categoryId === selectedCategoryId) : todos.filter((todo) => !todo.categoryId);
 
 	return (
 		<div>
@@ -78,13 +81,25 @@ export default function Index() {
 				</div>
 			</div>
 
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-				{categories.map((category) => (
-					<CategoryFolder key={category.id} category={category} />
-				))}
+			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+				{/* 뒤로가기 폴더 - 카테고리가 선택되었을 때만 표시 */}
+				{selectedCategoryId && (
+					<button onClick={() => setSelectedCategoryId(null)} className="block w-full p-4 border rounded-lg hover:bg-gray-50">
+						<div className="flex items-center gap-2">
+							<svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+							</svg>
+							<span className="font-medium">뒤로가기</span>
+						</div>
+					</button>
+				)}
 
-				{uncategorizedTodos.map((todo) => (
-					<div key={todo.id} className="border rounded-lg p-4 hover:bg-gray-50">
+				{/* 카테고리 폴더들 - 카테고리가 선택되지 않았을 때만 표시 */}
+				{!selectedCategoryId && categories.map((category) => <CategoryFolder key={category.id} category={category} onSelect={setSelectedCategoryId} isSelected={category.id === selectedCategoryId} />)}
+
+				{/* 할 일들 */}
+				{filteredTodos.map((todo) => (
+					<div key={todo.id} className="border rounded-lg hover:bg-gray-50 transition-colors">
 						<TodoItem todo={todo} />
 					</div>
 				))}
