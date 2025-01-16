@@ -2,11 +2,11 @@ import { json, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-r
 import { useLoaderData, Form, useSearchParams } from "@remix-run/react";
 import { useState } from "react";
 import type { Priority } from "@prisma/client";
-import { getCategories, createCategory, deleteCategory } from "~/category.server";
+import { getCategories, createCategory, deleteCategory } from "~/utils/category.server";
 import { CategoryFolder } from "./CategoryFolder";
 import { Modal } from "./Modal";
-import { requireUserId } from "./session.server";
-import { getTodos, createTodo, updateTodo, deleteTodo } from "./todo.server";
+import { requireUserId } from "../utils/session.server";
+import { getTodos, createTodo, updateTodo, deleteTodo } from "../utils/todo.server";
 import { TodoItem } from "./TodoItem";
 
 export async function loader({ request }: LoaderFunctionArgs) {

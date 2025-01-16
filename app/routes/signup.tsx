@@ -1,8 +1,8 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Form, useActionData, Link } from "@remix-run/react";
-import { createUserSession, getUserId } from "./session.server";
-import { getUserByEmail, createUser } from "./user.server";
+import { createUserSession, getUserId } from "../utils/session.server";
+import { getUserByEmail, createUser } from "../utils/user.server";
 
 type ActionErrors = {
 	email?: string;

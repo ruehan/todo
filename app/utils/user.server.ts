@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { prisma } from "~/db.server";
+import { prisma } from "~/utils/db.server";
 
 export async function getUserById(id: string) {
 	return prisma.user.findUnique({ where: { id } });

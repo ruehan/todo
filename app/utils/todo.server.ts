@@ -1,4 +1,4 @@
-import { prisma } from "~/db.server";
+import { prisma } from "~/utils/db.server";
 import type { Priority } from "@prisma/client";
 
 export async function getTodos(

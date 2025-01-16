@@ -1,8 +1,8 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
-import { getCategories } from "~/category.server";
-import { requireUserId } from "./session.server";
-import { getTodos } from "./todo.server";
+import { getCategories } from "~/utils/category.server";
+import { requireUserId } from "../utils/session.server";
+import { getTodos } from "../utils/todo.server";
 import { TodoItem } from "./TodoItem";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
