@@ -9,8 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Todo {
@@ -23,12 +24,16 @@ model Todo {
   category    Category? @relation(fields: [categoryId], references: [id])
   categoryId  String?
   priority    Priority @default(MEDIUM)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
 }
 
 model Category {
   id    String @id @default(uuid())
   name  String
   todos Todo[]
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
 }
 
 enum Priority {
@@ -38,8 +43,10 @@ enum Priority {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String     @id @default(uuid())
+  email     String     @unique
   password  String
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
+  todos     Todo[]
+  categories Category[]
 }
