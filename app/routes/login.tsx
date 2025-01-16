@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, useActionData, useSearchParams } from "@remix-run/react";
+import { Form, useActionData, useSearchParams, Link } from "@remix-run/react";
 import { createUserSession, getUserId } from "./session.server";
 import { verifyLogin } from "./user.server";
 
@@ -59,6 +59,13 @@ export default function Login() {
 					</button>
 
 					{actionData?.errors?.email && <div className="text-red-500">{actionData.errors.email}</div>}
+
+					<div className="text-center text-sm text-gray-500">
+						계정이 없으신가요?{" "}
+						<Link className="text-blue-500 underline" to="/signup">
+							회원가입
+						</Link>
+					</div>
 				</Form>
 			</div>
 		</div>
