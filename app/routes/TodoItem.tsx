@@ -2,6 +2,8 @@ import type { Priority, Todo } from "@prisma/client";
 import { Form } from "@remix-run/react";
 import { useDraggable } from "@dnd-kit/core";
 import type { DraggableSyntheticListeners } from "@dnd-kit/core";
+import { TrashIcon } from "@heroicons/react/24/outline";
+import { PriorityBadge } from "./PriorityBadge";
 
 interface TodoItemProps {
 	todo: Todo;
@@ -23,35 +25,28 @@ export function TodoItem({ todo, isOverlay = false }: TodoItemProps) {
 			  }
 			: undefined;
 
-	const getPriorityIcon = (priority: Priority) => {
-		switch (priority) {
-			case "HIGH":
-				return (
-					<svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-					</svg>
-				);
-			case "MEDIUM":
-				return (
-					<svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
-					</svg>
-				);
-			case "LOW":
-				return (
-					<svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-					</svg>
-				);
-		}
-	};
-
 	const itemContent = (
 		<div className={`bg-white rounded-lg shadow p-4 ${todo.completed ? "opacity-50" : ""}`}>
-			<div className="flex items-center gap-4">
+			<div className="flex items-center gap-2">
 				<div className="flex-1 min-w-0">
 					<h3 className="text-sm font-medium truncate">{todo.title}</h3>
 				</div>
+
+				{todo.priority && (
+					<div className="flex-shrink-0">
+						<PriorityBadge priority={todo.priority} />
+					</div>
+				)}
+
+				{!isOverlay && (
+					<Form method="post" className="flex-shrink-0">
+						<input type="hidden" name="_action" value="deleteTodo" />
+						<input type="hidden" name="todoId" value={todo.id} />
+						<button type="submit" className="p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-gray-100 transition-colors">
+							<TrashIcon className="w-4 h-4" />
+						</button>
+					</Form>
+				)}
 			</div>
 		</div>
 	);
