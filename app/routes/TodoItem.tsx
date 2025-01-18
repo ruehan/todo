@@ -5,13 +5,23 @@ import type { DraggableSyntheticListeners } from "@dnd-kit/core";
 
 interface TodoItemProps {
 	todo: Todo;
+	isDragging?: boolean;
+	isOverlay?: boolean;
 }
 
-export function TodoItem({ todo }: TodoItemProps) {
-	const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+export function TodoItem({ todo, isOverlay = false }: TodoItemProps) {
+	const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
 		id: todo.id,
 		data: todo,
 	});
+
+	const style =
+		!isOverlay && transform
+			? {
+					transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+					touchAction: "none",
+			  }
+			: undefined;
 
 	const getPriorityIcon = (priority: Priority) => {
 		switch (priority) {
@@ -36,41 +46,23 @@ export function TodoItem({ todo }: TodoItemProps) {
 		}
 	};
 
-	return (
-		<div ref={setNodeRef} {...attributes} {...listeners} className={`group relative h-full cursor-move transition-opacity ${isDragging ? "opacity-50" : ""}`}>
-			{/* 우선순위 아이콘 - 왼쪽 상단 */}
-			<div className="absolute top-2 left-2">{getPriorityIcon(todo.priority)}</div>
-
-			{/* 삭제 버튼 - 오른쪽 상단 */}
-			<Form method="post" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-				<input type="hidden" name="id" value={todo.id} />
-				<button type="submit" name="_action" value="delete" className="text-gray-400 hover:text-red-500">
-					<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-					</svg>
-				</button>
-			</Form>
-
-			{/* 메인 콘텐츠 */}
-			<div className="pt-10 pb-4 px-4">
-				<Form method="post" className="space-y-2">
-					<input type="hidden" name="id" value={todo.id} />
-					<div className="flex items-center gap-3">
-						<input type="checkbox" name="completed" checked={todo.completed} onChange={(e) => e.target.form?.submit()} className="h-5 w-5 rounded border-gray-300" />
-						<span className={`flex-1 ${todo.completed ? "line-through text-gray-500" : ""}`}>{todo.title}</span>
-					</div>
-				</Form>
-
-				{/* 마감일 - 하단 */}
-				{todo.deadline && (
-					<div className="mt-2 flex items-center text-sm text-gray-500">
-						<svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-						</svg>
-						{new Date(todo.deadline).toLocaleDateString()}
-					</div>
-				)}
+	const itemContent = (
+		<div className={`bg-white rounded-lg shadow p-4 ${todo.completed ? "opacity-50" : ""}`}>
+			<div className="flex items-center gap-4">
+				<div className="flex-1 min-w-0">
+					<h3 className="text-sm font-medium truncate">{todo.title}</h3>
+				</div>
 			</div>
+		</div>
+	);
+
+	if (isOverlay) {
+		return itemContent;
+	}
+
+	return (
+		<div ref={setNodeRef} style={style} {...attributes} {...listeners} className={`group relative h-full cursor-move transition-opacity ${isDragging ? "opacity-50" : ""}`}>
+			{itemContent}
 		</div>
 	);
 }

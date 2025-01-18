@@ -169,10 +169,10 @@ export default function Index() {
 				</div>
 			</DndContext>
 
-			<DragOverlay dropAnimation={null}>
+			<DragOverlay modifiers={[]} dropAnimation={null}>
 				{activeTodo ? (
-					<div className="w-48 opacity-80 shadow-lg rounded-lg bg-white p-4">
-						<h3 className="text-sm font-medium truncate">{activeTodo.title}</h3>
+					<div className="w-72 cursor-grabbing">
+						<TodoItem todo={activeTodo} isDragging={false} isOverlay={true} />
 					</div>
 				) : null}
 			</DragOverlay>
