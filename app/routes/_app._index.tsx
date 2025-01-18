@@ -8,7 +8,7 @@ import { Modal } from "./Modal";
 import { requireUserId } from "../utils/session.server";
 import { getTodos, createTodo, updateTodo, deleteTodo } from "../utils/todo.server";
 import { TodoItem } from "./TodoItem";
-import { DndContext, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragStartEvent, pointerWithin } from "@dnd-kit/core";
 import { DragOverlay } from "@dnd-kit/core";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -51,7 +51,15 @@ export async function action({ request }: ActionFunctionArgs) {
 	} else if (_action === "updateCategory") {
 		const todoId = formData.get("todoId") as string;
 		const categoryId = formData.get("categoryId") as string;
-		await updateTodo({ id: todoId, userId, categoryId });
+
+		// "null" 문자열이 전달되면 실제 null로 변환
+		const actualCategoryId = categoryId === "null" ? null : categoryId;
+
+		await updateTodo({
+			id: todoId,
+			userId,
+			categoryId: actualCategoryId as string | undefined,
+		});
 	}
 
 	return null;
@@ -80,14 +88,20 @@ export default function Index() {
 	function handleDragEnd(event: DragEndEvent) {
 		setActiveTodo(null);
 
-		if (event.over && event.active.id !== event.over.id) {
-			const formData = new FormData();
-			formData.append("_action", "updateCategory");
-			formData.append("todoId", String(event.active.id));
-			formData.append("categoryId", String(event.over.id));
+		const { active, over } = event;
+		const formData = new FormData();
+		formData.append("_action", "updateCategory");
+		formData.append("todoId", String(active.id));
 
-			fetcher.submit(formData, { method: "post" });
+		if (over) {
+			// 폴더에 드롭한 경우
+			formData.append("categoryId", String(over.id));
+		} else {
+			// 폴더 밖으로 드래그한 경우 (카테고리 해제)
+			formData.append("categoryId", "null");
 		}
+
+		fetcher.submit(formData, { method: "post" });
 	}
 
 	// 현재 선택된 카테고리의 할일 목록
@@ -95,7 +109,13 @@ export default function Index() {
 
 	return (
 		<div>
-			<DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+			<DndContext
+				onDragStart={handleDragStart}
+				onDragEnd={handleDragEnd}
+				// collision detection 알고리즘을 pointerWithin으로 변경하여
+				// 더 정확한 드롭 감지
+				collisionDetection={pointerWithin}
+			>
 				<div className="mb-8">
 					<div className="flex gap-4 mb-4">
 						<Form method="post" className="flex-1 flex gap-4">
