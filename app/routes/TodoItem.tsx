@@ -2,8 +2,9 @@ import type { Priority, Todo } from "@prisma/client";
 import { Form } from "@remix-run/react";
 import { useDraggable } from "@dnd-kit/core";
 import type { DraggableSyntheticListeners } from "@dnd-kit/core";
-import { TrashIcon } from "@heroicons/react/24/outline";
+import { TrashIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import { PriorityBadge } from "./PriorityBadge";
+import { useState } from "react";
 
 interface TodoItemProps {
 	todo: Todo;
@@ -12,6 +13,7 @@ interface TodoItemProps {
 }
 
 export function TodoItem({ todo, isOverlay = false }: TodoItemProps) {
+	const [isDragStarted, setIsDragStarted] = useState(false);
 	const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
 		id: todo.id,
 		data: todo,
@@ -25,9 +27,33 @@ export function TodoItem({ todo, isOverlay = false }: TodoItemProps) {
 			  }
 			: undefined;
 
+	const handleDragStart = (e: React.PointerEvent) => {
+		setIsDragStarted(true);
+		listeners?.onPointerDown?.(e);
+	};
+
+	const handleDragEnd = (e: React.PointerEvent) => {
+		setIsDragStarted(false);
+		listeners?.onPointerUp?.(e);
+	};
+
 	const itemContent = (
 		<div className={`bg-white rounded-lg shadow p-4 ${todo.completed ? "opacity-50" : ""}`}>
 			<div className="flex items-center gap-2">
+				<div
+					className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600"
+					{...attributes}
+					onPointerDown={handleDragStart}
+					onPointerUp={handleDragEnd}
+					onClick={(e) => {
+						if (!isDragStarted) {
+							e.preventDefault();
+						}
+					}}
+				>
+					<Bars3Icon className="w-5 h-5" />
+				</div>
+
 				<div className="flex-1 min-w-0">
 					<h3 className="text-sm font-medium truncate">{todo.title}</h3>
 				</div>
@@ -56,7 +82,7 @@ export function TodoItem({ todo, isOverlay = false }: TodoItemProps) {
 	}
 
 	return (
-		<div ref={setNodeRef} style={style} {...attributes} {...listeners} className={`group relative h-full cursor-move transition-opacity ${isDragging ? "opacity-50" : ""}`}>
+		<div ref={setNodeRef} style={style} className={`group relative h-full transition-opacity ${isDragging ? "opacity-50" : ""}`}>
 			{itemContent}
 		</div>
 	);
