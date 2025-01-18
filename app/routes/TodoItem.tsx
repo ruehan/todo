@@ -1,5 +1,5 @@
 import type { Priority, Todo } from "@prisma/client";
-import { Form } from "@remix-run/react";
+import { Form, useFetcher } from "@remix-run/react";
 import { useDraggable } from "@dnd-kit/core";
 import type { DraggableSyntheticListeners } from "@dnd-kit/core";
 import { TrashIcon, Bars3Icon } from "@heroicons/react/24/outline";
@@ -13,6 +13,7 @@ interface TodoItemProps {
 }
 
 export function TodoItem({ todo, isOverlay = false }: TodoItemProps) {
+	const fetcher = useFetcher();
 	const [isDragStarted, setIsDragStarted] = useState(false);
 	const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
 		id: todo.id,
@@ -35,6 +36,13 @@ export function TodoItem({ todo, isOverlay = false }: TodoItemProps) {
 	const handleDragEnd = (e: React.PointerEvent) => {
 		setIsDragStarted(false);
 		listeners?.onPointerUp?.(e);
+	};
+
+	const handleDelete = (e: React.MouseEvent) => {
+		e.preventDefault();
+		if (window.confirm("이 할일을 삭제하시겠습니까?")) {
+			fetcher.submit({ _action: "deleteTodo", todoId: todo.id }, { method: "post" });
+		}
 	};
 
 	const itemContent = (
@@ -72,13 +80,14 @@ export function TodoItem({ todo, isOverlay = false }: TodoItemProps) {
 				)}
 
 				{!isOverlay && (
-					<Form method="post" className="flex-shrink-0">
-						<input type="hidden" name="_action" value="deleteTodo" />
-						<input type="hidden" name="todoId" value={todo.id} />
-						<button type="submit" className="p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-gray-100 transition-colors">
-							<TrashIcon className="w-4 h-4" />
-						</button>
-					</Form>
+					<button
+						onClick={handleDelete}
+						className="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 
+								 rounded-full hover:bg-gray-100 transition-colors"
+						title="할일 삭제"
+					>
+						<TrashIcon className="w-4 h-4" />
+					</button>
 				)}
 			</div>
 		</div>

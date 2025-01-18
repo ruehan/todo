@@ -47,7 +47,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		await updateTodo({ id, userId, completed: !completed });
 	} else if (_action === "delete") {
 		const id = formData.get("id") as string;
-		await deleteTodo(id, userId);
+		await deleteTodo({ id, userId });
 	} else if (_action === "updateCategory") {
 		const todoId = formData.get("todoId") as string;
 		const categoryId = formData.get("categoryId") as string;
@@ -60,6 +60,10 @@ export async function action({ request }: ActionFunctionArgs) {
 			userId,
 			categoryId: actualCategoryId as string | undefined,
 		});
+	} else if (_action === "deleteTodo") {
+		const todoId = formData.get("todoId") as string;
+		await deleteTodo({ id: todoId, userId });
+		return null;
 	}
 
 	return null;

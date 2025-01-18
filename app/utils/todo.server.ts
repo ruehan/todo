@@ -47,8 +47,11 @@ export async function updateTodo({ id, userId, categoryId, ...data }: { id: stri
 	});
 }
 
-export async function deleteTodo(id: string, userId: string) {
+export async function deleteTodo({ id, userId }: { id: string; userId: string }) {
 	return prisma.todo.delete({
-		where: { id, userId },
+		where: {
+			id,
+			userId,
+		},
 	});
 }
