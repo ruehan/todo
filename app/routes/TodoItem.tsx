@@ -54,8 +54,15 @@ export function TodoItem({ todo, isOverlay = false }: TodoItemProps) {
 					<Bars3Icon className="w-5 h-5" />
 				</div>
 
-				<div className="flex-1 min-w-0">
-					<h3 className="text-sm font-medium truncate">{todo.title}</h3>
+				<div className="flex-1 min-w-0 group/title relative">
+					<h3 className="text-sm font-medium truncate" title={todo.title}>
+						{todo.title}
+					</h3>
+
+					<div className="absolute left-0 -top-8 transform opacity-0 invisible group-hover/title:opacity-100 group-hover/title:visible transition-all duration-200 z-10 w-max max-w-screen-sm">
+						<div className="bg-gray-900 text-white px-3 py-1.5 rounded text-sm whitespace-nowrap shadow-lg">{todo.title}</div>
+						<div className="absolute -bottom-1 left-4 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+					</div>
 				</div>
 
 				{todo.priority && (
