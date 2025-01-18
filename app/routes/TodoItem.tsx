@@ -1,37 +1,17 @@
-import type { Category, Priority } from "@prisma/client";
+import type { Priority, Todo } from "@prisma/client";
 import { Form } from "@remix-run/react";
 import { useDraggable } from "@dnd-kit/core";
+import type { DraggableSyntheticListeners } from "@dnd-kit/core";
 
 interface TodoItemProps {
-	todo: {
-		id: string;
-		title: string;
-		completed: boolean;
-		priority: Priority;
-		deadline: string | null; // Date를 string으로 변경
-		createdAt: string; // Date를 string으로 변경
-		updatedAt: string; // Date를 string으로 변경
-		categoryId: string | null;
-		userId: string;
-		category: {
-			id: string;
-			name: string;
-			userId: string;
-		} | null;
-	};
+	todo: Todo;
 }
 
 export function TodoItem({ todo }: TodoItemProps) {
-	const { attributes, listeners, setNodeRef, transform } = useDraggable({
+	const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
 		id: todo.id,
 		data: todo,
 	});
-
-	const style = transform
-		? {
-				transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-		  }
-		: undefined;
 
 	const getPriorityIcon = (priority: Priority) => {
 		switch (priority) {
@@ -57,7 +37,7 @@ export function TodoItem({ todo }: TodoItemProps) {
 	};
 
 	return (
-		<div ref={setNodeRef} style={style} {...attributes} {...listeners} className="group relative h-full cursor-move">
+		<div ref={setNodeRef} {...attributes} {...listeners} className={`group relative h-full cursor-move transition-opacity ${isDragging ? "opacity-50" : ""}`}>
 			{/* 우선순위 아이콘 - 왼쪽 상단 */}
 			<div className="absolute top-2 left-2">{getPriorityIcon(todo.priority)}</div>
 

@@ -1,14 +1,15 @@
 import { json, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Form, useSearchParams, useFetcher } from "@remix-run/react";
 import { useState } from "react";
-import type { Priority } from "@prisma/client";
+import type { Priority, Todo } from "@prisma/client";
 import { getCategories, createCategory, deleteCategory } from "~/utils/category.server";
 import { CategoryFolder } from "./CategoryFolder";
 import { Modal } from "./Modal";
 import { requireUserId } from "../utils/session.server";
 import { getTodos, createTodo, updateTodo, deleteTodo } from "../utils/todo.server";
 import { TodoItem } from "./TodoItem";
-import { DndContext, DragEndEvent } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import { DragOverlay } from "@dnd-kit/core";
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request);
@@ -61,15 +62,29 @@ export default function Index() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 	const fetcher = useFetcher();
+	const [activeTodo, setActiveTodo] = useState<Todo | null>(null);
+
+	function handleDragStart(event: DragStartEvent) {
+		const draggedTodo = todos.find((t) => t.id === event.active.id);
+		if (draggedTodo) {
+			const todo = {
+				...draggedTodo,
+				deadline: draggedTodo.deadline ? new Date(draggedTodo.deadline) : null,
+				createdAt: new Date(draggedTodo.createdAt),
+				updatedAt: new Date(draggedTodo.updatedAt),
+			};
+			setActiveTodo(todo);
+		}
+	}
 
 	function handleDragEnd(event: DragEndEvent) {
-		const { active, over } = event;
+		setActiveTodo(null);
 
-		if (over && active.id !== over.id) {
+		if (event.over && event.active.id !== event.over.id) {
 			const formData = new FormData();
 			formData.append("_action", "updateCategory");
-			formData.append("todoId", active.id as string);
-			formData.append("categoryId", over.id as string);
+			formData.append("todoId", String(event.active.id));
+			formData.append("categoryId", String(event.over.id));
 
 			fetcher.submit(formData, { method: "post" });
 		}
@@ -80,7 +95,7 @@ export default function Index() {
 
 	return (
 		<div>
-			<DndContext onDragEnd={handleDragEnd}>
+			<DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
 				<div className="mb-8">
 					<div className="flex gap-4 mb-4">
 						<Form method="post" className="flex-1 flex gap-4">
@@ -121,11 +136,26 @@ export default function Index() {
 					{/* 할 일들 */}
 					{filteredTodos.map((todo) => (
 						<div key={todo.id} className="border rounded-lg hover:bg-gray-50 transition-colors">
-							<TodoItem todo={todo} />
+							<TodoItem
+								todo={{
+									...todo,
+									createdAt: new Date(todo.createdAt),
+									updatedAt: new Date(todo.updatedAt),
+									deadline: todo.deadline ? new Date(todo.deadline) : null,
+								}}
+							/>
 						</div>
 					))}
 				</div>
 			</DndContext>
+
+			<DragOverlay dropAnimation={null}>
+				{activeTodo ? (
+					<div className="w-48 opacity-80 shadow-lg rounded-lg bg-white p-4">
+						<h3 className="text-sm font-medium truncate">{activeTodo.title}</h3>
+					</div>
+				) : null}
+			</DragOverlay>
 
 			<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
 				<h2 className="text-lg font-semibold mb-4">새 폴더 만들기</h2>
