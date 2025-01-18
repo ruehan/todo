@@ -37,10 +37,13 @@ export async function createTodo({ title, userId, categoryId, deadline, priority
 	});
 }
 
-export async function updateTodo({ id, userId, ...data }: { id: string; userId: string; completed?: boolean; title?: string; deadline?: Date; priority?: "HIGH" | "MEDIUM" | "LOW" }) {
+export async function updateTodo({ id, userId, categoryId, ...data }: { id: string; userId: string; categoryId?: string; completed?: boolean; title?: string; deadline?: Date; priority?: Priority }) {
 	return prisma.todo.update({
 		where: { id, userId },
-		data,
+		data: {
+			...data,
+			categoryId,
+		},
 	});
 }
 

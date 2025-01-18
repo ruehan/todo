@@ -1,5 +1,6 @@
 import type { Category, Priority } from "@prisma/client";
 import { Form } from "@remix-run/react";
+import { useDraggable } from "@dnd-kit/core";
 
 interface TodoItemProps {
 	todo: {
@@ -21,6 +22,17 @@ interface TodoItemProps {
 }
 
 export function TodoItem({ todo }: TodoItemProps) {
+	const { attributes, listeners, setNodeRef, transform } = useDraggable({
+		id: todo.id,
+		data: todo,
+	});
+
+	const style = transform
+		? {
+				transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+		  }
+		: undefined;
+
 	const getPriorityIcon = (priority: Priority) => {
 		switch (priority) {
 			case "HIGH":
@@ -45,7 +57,7 @@ export function TodoItem({ todo }: TodoItemProps) {
 	};
 
 	return (
-		<div className="group relative h-full">
+		<div ref={setNodeRef} style={style} {...attributes} {...listeners} className="group relative h-full cursor-move">
 			{/* 우선순위 아이콘 - 왼쪽 상단 */}
 			<div className="absolute top-2 left-2">{getPriorityIcon(todo.priority)}</div>
 
