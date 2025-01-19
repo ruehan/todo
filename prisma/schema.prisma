@@ -26,6 +26,7 @@ model Todo {
   priority    Priority @default(MEDIUM)
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
+  memo        String?
 }
 
 model Category {
