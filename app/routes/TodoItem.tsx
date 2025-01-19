@@ -1,4 +1,4 @@
-import type { Priority, Todo } from "@prisma/client";
+import type { Todo } from "@prisma/client";
 import { Form, useFetcher } from "@remix-run/react";
 import { useDraggable } from "@dnd-kit/core";
 import type { DraggableSyntheticListeners } from "@dnd-kit/core";
@@ -7,12 +7,24 @@ import { PriorityBadge } from "./PriorityBadge";
 import { useState } from "react";
 
 interface TodoItemProps {
-	todo: Todo;
+	todo: {
+		id: string;
+		userId: string;
+		categoryId: string | null;
+		completed: boolean;
+		title: string;
+		deadline: Date | null;
+		priority: "HIGH" | "MEDIUM" | "LOW" | null;
+		createdAt: Date;
+		updatedAt: Date;
+		memo?: string | null;
+	};
 	isDragging?: boolean;
 	isOverlay?: boolean;
+	onTodoClick?: (todo: Todo) => void;
 }
 
-export function TodoItem({ todo, isOverlay = false }: TodoItemProps) {
+export function TodoItem({ todo, isOverlay = false, onTodoClick }: TodoItemProps) {
 	const fetcher = useFetcher();
 	const [isDragStarted, setIsDragStarted] = useState(false);
 	const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -44,9 +56,8 @@ export function TodoItem({ todo, isOverlay = false }: TodoItemProps) {
 			fetcher.submit({ _action: "deleteTodo", todoId: todo.id }, { method: "post" });
 		}
 	};
-
 	const itemContent = (
-		<div className={`bg-white rounded-lg shadow p-4 ${todo.completed ? "opacity-50" : ""}`}>
+		<div className={`bg-white rounded-lg shadow p-4 ${todo.completed ? "opacity-50" : ""}`} onClick={() => !isOverlay && onTodoClick?.(todo as Todo)}>
 			<div className="flex items-center gap-2">
 				<div
 					className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600"

@@ -1,7 +1,7 @@
 import { json, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Form, useSearchParams, useFetcher } from "@remix-run/react";
 import { useState } from "react";
-import type { Priority, Todo } from "@prisma/client";
+import type { Priority, Todo, Category } from "@prisma/client";
 import { getCategories, createCategory, deleteCategory } from "~/utils/category.server";
 import { CategoryFolder } from "./CategoryFolder";
 import { Modal } from "./Modal";
@@ -10,6 +10,7 @@ import { getTodos, createTodo, updateTodo, deleteTodo } from "../utils/todo.serv
 import { TodoItem } from "./TodoItem";
 import { DndContext, DragEndEvent, DragStartEvent, pointerWithin } from "@dnd-kit/core";
 import { DragOverlay } from "@dnd-kit/core";
+import { TodoDetailModal } from "./TodoDetailModal";
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request);
@@ -64,6 +65,11 @@ export async function action({ request }: ActionFunctionArgs) {
 		const todoId = formData.get("todoId") as string;
 		await deleteTodo({ id: todoId, userId });
 		return null;
+	} else if (_action === "updateTodoMemo") {
+		const todoId = formData.get("todoId") as string;
+		const memo = formData.get("memo") as string;
+		await updateTodo({ id: todoId, userId, memo });
+		return null;
 	}
 
 	return null;
@@ -75,6 +81,7 @@ export default function Index() {
 	const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 	const fetcher = useFetcher();
 	const [activeTodo, setActiveTodo] = useState<Todo | null>(null);
+	const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
 
 	function handleDragStart(event: DragStartEvent) {
 		const draggedTodo = todos.find((t) => t.id === event.active.id);
@@ -158,18 +165,19 @@ export default function Index() {
 						categories.map((category) => <CategoryFolder key={category.id} category={category} onSelect={setSelectedCategoryId} isSelected={category.id === selectedCategoryId} />)}
 
 					{/* 할 일들 */}
-					{filteredTodos.map((todo) => (
-						<div key={todo.id} className="border rounded-lg hover:bg-gray-50 transition-colors">
-							<TodoItem
-								todo={{
-									...todo,
-									createdAt: new Date(todo.createdAt),
-									updatedAt: new Date(todo.updatedAt),
-									deadline: todo.deadline ? new Date(todo.deadline) : null,
-								}}
-							/>
-						</div>
-					))}
+					{filteredTodos.map((todo) => {
+						const parsedTodo = {
+							...todo,
+							deadline: todo.deadline ? new Date(todo.deadline) : null,
+							createdAt: new Date(todo.createdAt),
+							updatedAt: new Date(todo.updatedAt),
+						};
+						return (
+							<div key={todo.id} className="border rounded-lg hover:bg-gray-50 transition-colors">
+								<TodoItem todo={parsedTodo} onTodoClick={(todo) => setSelectedTodo(todo)} />
+							</div>
+						);
+					})}
 				</div>
 			</DndContext>
 
@@ -197,6 +205,8 @@ export default function Index() {
 					</div>
 				</Form>
 			</Modal>
+
+			{selectedTodo && <TodoDetailModal todo={selectedTodo} isOpen={!!selectedTodo} onClose={() => setSelectedTodo(null)} />}
 		</div>
 	);
 }
