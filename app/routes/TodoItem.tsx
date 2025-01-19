@@ -5,6 +5,8 @@ import type { DraggableSyntheticListeners } from "@dnd-kit/core";
 import { TrashIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import { PriorityBadge } from "./PriorityBadge";
 import { useState } from "react";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
 
 interface TodoItemProps {
 	todo: {
@@ -58,48 +60,45 @@ export function TodoItem({ todo, isOverlay = false, onTodoClick }: TodoItemProps
 	};
 	const itemContent = (
 		<div className={`bg-white rounded-lg shadow p-4 ${todo.completed ? "opacity-50" : ""}`} onClick={() => !isOverlay && onTodoClick?.(todo as Todo)}>
-			<div className="flex items-center gap-2">
-				<div
-					className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600"
-					{...attributes}
-					onPointerDown={handleDragStart}
-					onPointerUp={handleDragEnd}
-					onClick={(e) => {
-						if (!isDragStarted) {
-							e.preventDefault();
-						}
-					}}
-				>
-					<Bars3Icon className="w-5 h-5" />
-				</div>
-
-				<div className="flex-1 min-w-0 group/title relative">
-					<h3 className="text-sm font-medium truncate" title={todo.title}>
-						{todo.title}
-					</h3>
-
-					<div className="absolute left-0 -top-8 transform opacity-0 invisible group-hover/title:opacity-100 group-hover/title:visible transition-all duration-200 z-10 w-max max-w-screen-sm">
-						<div className="bg-gray-900 text-white px-3 py-1.5 rounded text-sm whitespace-nowrap shadow-lg">{todo.title}</div>
-						<div className="absolute -bottom-1 left-4 w-2 h-2 bg-gray-900 transform rotate-45"></div>
-					</div>
-				</div>
-
-				{todo.priority && (
-					<div className="flex-shrink-0">
-						<PriorityBadge priority={todo.priority} />
-					</div>
-				)}
-
-				{!isOverlay && (
-					<button
-						onClick={handleDelete}
-						className="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 
-								 rounded-full hover:bg-gray-100 transition-colors"
-						title="할일 삭제"
+			<div className="flex flex-col gap-1">
+				<div className="flex items-center gap-2">
+					<div
+						className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600"
+						{...attributes}
+						onPointerDown={handleDragStart}
+						onPointerUp={handleDragEnd}
+						onClick={(e) => {
+							if (!isDragStarted) {
+								e.preventDefault();
+							}
+						}}
 					>
-						<TrashIcon className="w-4 h-4" />
-					</button>
-				)}
+						<Bars3Icon className="w-5 h-5" />
+					</div>
+
+					<div className="flex-1 min-w-0">
+						<h3 className="text-sm font-medium truncate">{todo.title}</h3>
+					</div>
+
+					{todo.priority && (
+						<div className="flex-shrink-0">
+							<PriorityBadge priority={todo.priority} />
+						</div>
+					)}
+
+					{!isOverlay && (
+						<button
+							onClick={handleDelete}
+							className="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 
+									 rounded-full hover:bg-gray-100 transition-colors"
+							title="할일 삭제"
+						>
+							<TrashIcon className="w-4 h-4" />
+						</button>
+					)}
+				</div>
+
+				{todo.deadline && <div className="text-xs text-gray-500">마감일: {format(new Date(todo.deadline), "yyyy년 MM월 dd일", { locale: ko })}</div>}
 			</div>
 		</div>
 	);
